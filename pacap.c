@@ -82,35 +82,38 @@ int main(int argc, char *argv[])
 			return (2);
 		}
 
-	//sscanf(argv[2], %d)
+	sscnaf(argv[2], "%d.%d.%d.%d", &arp.arp_dip[0], &arp.arp_dip[1], &arp.arp_dip[2], &arp.arp_dip[3]);
 	char *NIC = argv[1];
-	unsigned int *DIP = argv[2];
 
 	FILE *fp_ip;
 	char i_buff[256];
 	fp_ip = popen("ifconfig eth0 | grep inet", "r");
 	fgets(i_buff, 255, fp_ip);
 	pclose(fp_ip);
+	sscnaf(fp_ip, "%d.%d.%d.%d", &arp.arp_sip[0], &arp.arp_sip[1], &arp.arp_sip[2], &arp.arp_sip[3]);
 
 	FILE *fp_mac;
 	char m_buff[256];
 	fp_mac = popen("ifconfig eth0 | grep ether", "r");
 	fgets(m_buff, 255, fp_mac);
 	pclose(fp_mac);
+	sscnaf(fp_mac, "%x:%x:%x:%x:%x:%x", &arp.eth_smac[0], &arp.eth_smac[1], &arp.eth_smac[2], &arp.eth_smac[3], &arp.eth_smac[4], &arp.eth_smac[5]);
 
+	arp.eth_dmac[0] = 0xFF;
+	arp.eth_dmac[1] = 0xFF;
+	arp.eth_dmac[2] = 0xFF;
+	arp.eth_dmac[3] = 0xFF;
+	arp.eth_dmac[4] = 0xFF;
+	arp.eth_dmac[5] = 0xFF;
 
-	arp.eth_dmac = 0xFFFFFFFFFFFF;
-	arp.eth_smac = htons(fp_ip);
 	arp.eth_type = 0x0806;
 	arp.arp_htype = htons(1);
 	arp.arp_p = 0x0800;
 	arp.arp_hsize = 0x06;
 	arp.arp_psize = 0x04;
 	arp.arp_opcode = 0x0001;
-	arp.arp_smac = htons(fp_mac);
-	arp.arp_dmac = 0xFFFFFFFFFFFF;
-	arp.arp_sip = htons(fp_ip);
-	arp.arp_dip = htons(DIP);
+	memcpy(arp.arp_smac,arp.eth_smac,sizeof(arp.eth_smac));
+	memcpy(arp.arp_dmac,arp.eth_dmac,sizeof(arp.eth_dmac));
 
 	pcap_sendpacket(handle, (void*)arp, sizeof(arp));
 		
